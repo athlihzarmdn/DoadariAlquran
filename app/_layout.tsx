@@ -7,6 +7,7 @@ import { useEffect } from "react";
 import "react-native-reanimated";
 import "../global.css";
 import { Platform } from "react-native";
+import { interstitialAdService } from "./services/InterstitialAdService";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -32,6 +33,11 @@ export default function RootLayout() {
         // Silently ignore tempo-devtools errors
         console.warn("tempo-devtools initialization failed:", error);
       }
+    }
+
+    // Initialize interstitial ad service on Android
+    if (Platform.OS === "android") {
+      interstitialAdService.preloadAd();
     }
   }, []);
 

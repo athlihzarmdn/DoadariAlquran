@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { View, Text, TouchableOpacity, ScrollView } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { ArrowLeft, ArrowRight } from "lucide-react-native";
+import { interstitialAdService } from "../services/InterstitialAdService";
 
 interface DoaData {
   id: string;
@@ -58,6 +59,11 @@ export default function DoaDetail() {
   const router = useRouter();
   const { id = "1" } = useLocalSearchParams();
 
+  // Preload ad when component mounts
+  useEffect(() => {
+    interstitialAdService.preloadAd();
+  }, []);
+
   // Find the current doa based on id
   const currentDoa = mockDoas.find((doa) => doa.id === id) || mockDoas[0];
 
@@ -71,7 +77,19 @@ export default function DoaDetail() {
       : mockDoas[0].id;
 
   // Navigate to the next doa
-  const handleNextDoa = () => {
+  const handleNextDoa = async () => {
+    // Show interstitial ad occasionally when navigating to next doa
+    // This follows AdMob policy by showing ads at natural transition points
+    const shouldShowAd = Math.random() < 0.3; // 30% chance to show ad
+
+    if (shouldShowAd) {
+      const adShown = await interstitialAdService.showAd();
+      if (adShown) {
+        setTimeout(() => router.push(`/doa/${nextId}`), 100);
+        return;
+      }
+    }
+
     router.push(`/doa/${nextId}`);
   };
 

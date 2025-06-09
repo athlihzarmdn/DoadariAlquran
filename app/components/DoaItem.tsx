@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import { ChevronRight } from "lucide-react-native";
+import { interstitialAdService } from "../services/InterstitialAdService";
 
 interface DoaItemProps {
   id: string;
@@ -12,11 +13,21 @@ interface DoaItemProps {
 const DoaItem = ({ id = "1", name = "Doa Pembuka", onPress }: DoaItemProps) => {
   const router = useRouter();
 
-  const handlePress = () => {
+  const handlePress = async () => {
     if (onPress) {
       onPress();
     } else {
-      router.push(`/doa/${id}`);
+      // Try to show interstitial ad before navigation
+      // This follows AdMob policy by showing ads at natural transition points
+      const adShown = await interstitialAdService.showAd();
+
+      // Navigate regardless of whether ad was shown
+      // Small delay if ad was shown to ensure smooth transition
+      if (adShown) {
+        setTimeout(() => router.push(`/doa/${id}`), 100);
+      } else {
+        router.push(`/doa/${id}`);
+      }
     }
   };
 
